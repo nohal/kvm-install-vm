@@ -64,6 +64,7 @@ function usage_subcommand ()
             printf "    -t          Linux Distribution  (default: centos7)\n"
             printf "    -T          Timezone            (default: US/Eastern)\n"
             printf "    -u          Custom user         (default: $USER)\n"
+            printf "    -x          Extra arguments for virt-install\n"
             printf "    -v          Be verbose\n"
             printf "\n"
             printf "DISTRIBUTIONS\n"
@@ -548,6 +549,7 @@ _EOF_
         printf "      --os-variant=${OS_VARIANT} \\ \n"
         printf "      --graphics ${GRAPHICS},port=${PORT},listen=localhost \\ \n"
         printf "      --noautoconsole  \n"
+        [ -n "${EXTRA_ARGS}" ] && printf "      ${EXTRA_ARGS}  \n"
     else
         outputn "Installing the domain"
     fi
@@ -564,7 +566,7 @@ _EOF_
         --os-type=linux \
         --os-variant=${OS_VARIANT} \
         --graphics ${GRAPHICS},port=${PORT},listen=localhost \
-        --noautoconsole &>> ${VMNAME}.log && ok ) \
+        --noautoconsole ${EXTRA_ARGS} &>> ${VMNAME}.log && ok ) \
         || die "Could not create domain with virt-install."
 
     virsh dominfo ${VMNAME} &>> ${VMNAME}.log
@@ -676,6 +678,7 @@ function set_defaults ()
     PORT=-1                         # Console port
     TIMEZONE=US/Eastern             # Timezone
     ADDITIONAL_USER=${USER}         # User
+    EXTRA_ARGS=""                   # Extra virt-install arguments
     VERBOSE=0                       # Verbosity
 
     # Reset OPTIND
@@ -694,7 +697,7 @@ function set_custom_defaults ()
 function create ()
 {
     # Parse command line arguments
-    while getopts ":a:b:c:d:D:f:g:i:k:l:m:M:p:s:t:T:u:hv" opt
+    while getopts ":a:b:c:d:D:f:g:i:k:l:L:m:M:p:s:t:T:u:x:hv" opt
     do
         case "$opt" in
             a ) AUTOSTART=true ;;
@@ -715,6 +718,7 @@ function create ()
             t ) DISTRO="${OPTARG}" ;;
             T ) TIMEZONE="${OPTARG}" ;;
             u ) ADDITIONAL_USER="${OPTARG}" ;;
+            x ) EXTRA_ARGS="${OPTARG}" ;;
             v ) VERBOSE=1 ;;
             h ) usage ;;
             * ) die "Unsupported option. Run 'kvm-install-vm help create'." ;;
